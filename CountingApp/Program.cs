@@ -9,8 +9,9 @@ services.AddHttpClient<IVersionChecker, VersionChecker>();
 services.AddSingleton(new VersionCheckerOptions
 {
     VersionManifestUrl =
-        "https://example.com/version.json"
+        "https://raw.githubusercontent.com/BogCiu/DemoVersionCheckandUpdate/main/version.json"
 });
+
 
 var provider = services.BuildServiceProvider();
 
