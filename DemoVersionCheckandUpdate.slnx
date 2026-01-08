@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="AppUpdater/AppUpdater.csproj" />
+  <Project Path="CountingApp/CountingApp.csproj" />
+  <Project Path="VersionCheck/VersionCheck.csproj" />
+</Solution>
