@@ -15,6 +15,12 @@ namespace VersionCheck
             _options = options;
         }
 
+        public async Task<Version> GetCurrentVersionAsync()
+        {
+                var localVersion = Assembly.GetEntryAssembly()?.GetName().Version;
+                return localVersion ?? new Version(0, 0, 0);
+        }
+
         public async Task<(bool HasUpdate, string Message)> CheckAsync()
         {
             var localVersion = Assembly.GetEntryAssembly()?.GetName().Version;
@@ -30,6 +36,10 @@ namespace VersionCheck
             }
 
             var remoteVersion = Version.Parse(remote.Version);
+            Console.WriteLine($"Local version: {localVersion}, Remote version: {remoteVersion}");
+            Console.WriteLine(remoteVersion > localVersion);
+            Console.WriteLine(remoteVersion < localVersion);
+            Console.WriteLine(remoteVersion == localVersion);
             return remoteVersion > localVersion
                 ? (true, $"New version {remoteVersion} available.")
                 : (false, "App is up to date.");
