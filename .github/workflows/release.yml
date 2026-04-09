@@ -1,10 +1,18 @@
-name: Build & Release App with Auto-Generated Manifest
+name: Build & Release App with Auto-Generated Manifest (Auto-version from csproj)
 
 on:
   push:
-    tags:
-      - "v*"           # workflow runs only when you push a version tag
+    branches:
+      - main
+      - master
+      - develop
+    # tags:
+      # - "v*"           # workflow runs only when you push a version tag
   workflow_dispatch:   # allow manual triggering
+
+permissions:
+  contents: write
+  actions: read
 
 jobs:
   build-release:
@@ -14,64 +22,85 @@ jobs:
     # 1. Checkout source code
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
 
-    # 2. Setup .NET
+    # 2. Parse version from .csproj
+    - name: Extract version from csproj
+      id: version
+      shell: pwsh
+      run: |
+        $xml = [xml](Get-Content "./CountingApp/CountingApp.csproj")
+        $version = $xml.Project.PropertyGroup.Version
+        echo "version=$version" >> $env:GITHUB_OUTPUT
+        
+    # 3. Setup .NET
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: "8.0.x"
 
-    # 3. Restore
+    # 4. Restore
     - name: Restore dependencies
       run: dotnet restore
 
-    # 4. Build (Release mode)
+    # 5. Build (Release mode)
     - name: Build
       run: dotnet build --configuration Release --no-restore
 
-    # 5. Publish (produce final binaries)
+    # 6. Publish (produce final binaries)
     - name: Publish
-      run: dotnet publish -c Release -o publish_output
+      run: dotnet publish CountingApp/CountingApp.csproj -c Release -o publish_output
 
-    # 6. Get assembly version from your DLL or EXE
-    - name: Extract version
-      id: version
-      run: |
-        $version = (Get-Item "publish_output/*.dll").VersionInfo.ProductVersion
-        echo "version = $version" >> $env:GITHUB_OUTPUT
+    # # 6. Get assembly version from your DLL or EXE
+    # - name: Extract version
+    #   id: version
+    #   run: |
+    #     $version = (Get-Item "publish_output/*.dll").VersionInfo.ProductVersion
+    #     echo "version = $version" >> $env:GITHUB_OUTPUT
 
     # 7. Zip the published output
     - name: Create ZIP artifact
       run: |
-        powershell Compress-Archive -Path publish_output/* -DestinationPath app.zip
+        powershell Compress-Archive -Path publish_output/* -DestinationPath app.zip -Force
 
     # 8. Generate version.json
     - name: Generate version.json
       run: |
         @"
         {
-          ""version"": "${{ steps.version.outputs.version }},
-          ""downloadUrl"": "https://github.com/${{ github.repository}}/ releases/download/v${{ steps.version.outputs.version }}
+          "version": "${{ steps.version.outputs.version }}",
+          "downloadUrl": "https://github.com/${{ github.repository}}/ releases/download/v${{ steps.version.outputs.version }}/app.zip"
         }
         "@ | Out-File version.json
 
-    # 9. Upload ZIP to GitHub Release
+    # 9. Upload ZIP to GitHub Release USING VERSION
     - name: Create/Update Github Release
       uses: softprops/action-gh-release@v1
       with:
         tag_name: "v${{ steps.version.outputs.version }}"
         name: "Release v${{ steps.version.outputs.version }}"
+        body: "Automated release from GitHub Actions"
         files: |
           app.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.MANIFEST_PUSH_TOKEN }}
 
     # 10. Push version.json into PUBLIC manifest repo
     - name: Push manifest to public repo
+      # run: |
+      #   git clone https://x-access-token:${{ secrets.MANIFEST_PUSH_TOKEN }}@github.com/YOUR_USERNAME/DemoVersionCheckandUpdate.Manifest.git manifest_repo
+      #   copy version.json manifest_repo/version.json
+      #   cd manifest_repo
+      #   git config user.email "actions@github.com"
+      #   git config user.name "GitHub Actions"
+      #   git add version.json
+      #   git commit -m "Update version.json for version ${{ steps.version.outputs.version }}"
+      #   git push
       run: |
-        git clone https://x-access-token:${{ secrets.MANIFEST_PUSH_TOKEN }}@github.com/YOUR_USERNAME/DemoVersionCheckandUpdate.Manifest.git manifest_repo
-        copy version.json manifest_repo/version.json
-        cd manifest_repo
-        git config user.email "actions@github.com"
         git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
         git add version.json
-        git commit -m "Update version.json for version ${{ steps.version.outputs.version }}"
+        git commit -m "Update version.json to ${{ steps.version.outputs.version }}"
+        echo "No Changes"
         git push
