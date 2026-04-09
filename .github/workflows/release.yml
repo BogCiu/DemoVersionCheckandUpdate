@@ -26,11 +26,9 @@ jobs:
       id: version
       shell: pwsh
       run: |
-        echo "ls"
         $xml = [xml](Get-Content "./../../CountingApp/CountingApp.csproj")
         $version = $xml.Project.PropertyGroup.Version
-        echo "version=$version" >>
-        $env:GITHUB_OUTPUT
+        echo "version=$version" >> $env:GITHUB_OUTPUT
         
     # 3. Setup .NET
     - name: Setup .NET
