@@ -10,6 +10,10 @@ on:
       # - "v*"           # workflow runs only when you push a version tag
   workflow_dispatch:   # allow manual triggering
 
+permissions:
+  contents: write
+  actions: read
+
 jobs:
   build-release:
     runs-on: windows-latest
@@ -79,6 +83,8 @@ jobs:
         body: "Automated release from GitHub Actions"
         files: |
           app.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.MANIFEST_PUSH_TOKEN }}
 
     # 10. Push version.json into PUBLIC manifest repo
     - name: Push manifest to public repo
