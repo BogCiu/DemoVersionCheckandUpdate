@@ -35,7 +35,7 @@ RunApp();
 
 static void RunApp()
 {
-    for (int i = 1; i <= 10; i++)
+    for (int i = 1; i <= 15; i++)
     {
         Console.WriteLine(i);
         Thread.Sleep(200);

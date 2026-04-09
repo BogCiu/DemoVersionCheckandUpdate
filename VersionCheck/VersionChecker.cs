@@ -36,10 +36,7 @@ namespace VersionCheck
             }
 
             var remoteVersion = Version.Parse(remote.Version);
-            Console.WriteLine($"Local version: {localVersion}, Remote version: {remoteVersion}");
-            Console.WriteLine(remoteVersion > localVersion);
-            Console.WriteLine(remoteVersion < localVersion);
-            Console.WriteLine(remoteVersion == localVersion);
+            Console.WriteLine($"Local version: {localVersion}, Remote version: {remoteVersion}");;
             return remoteVersion > localVersion
                 ? (true, $"New version {remoteVersion} available.")
                 : (false, "App is up to date.");
