@@ -70,7 +70,7 @@ jobs:
         @"
         {
           "version": "${{ steps.version.outputs.version }}",
-          "downloadUrl": "https://github.com/${{ github.repository}}/ releases/download/v${{ steps.version.outputs.version }}/app.zip"
+          "downloadUrl": "https://github.com/${{ github.repository}}/releases/download/v${{ steps.version.outputs.version }}/app.zip"
         }
         "@ | Out-File version.json
 
