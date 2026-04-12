@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
+using System.IO.Compression;
 using System.Runtime.InteropServices;
 using VersionCheck;
 
@@ -21,13 +22,14 @@ var checker = provider.GetRequiredService<IVersionChecker>();
 var (hasUpdate, message) = await checker.CheckAsync();
 
 var version = await checker.GetCurrentVersionAsync();
+string zipUpdatePackage = await checker.GetCurrentUpdateZip();
 Console.WriteLine($"Current version: {version}");
 
 Console.WriteLine(message);
 
 if (hasUpdate)
 {
-    LaunchUpdater();
+    LaunchUpdater(zipUpdatePackage);
     return;
 }
 
@@ -42,12 +44,12 @@ static void RunApp()
     }
 }
 
-static void LaunchUpdater()
+static void LaunchUpdater(string updatePackageUrl)
 {
     Process.Start("AppUpdater.exe", new[]
     {
         AppContext.BaseDirectory,
-        "update.zip",
+        updatePackageUrl,
         Process.GetCurrentProcess().Id.ToString()
     });
 

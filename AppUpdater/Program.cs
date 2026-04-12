@@ -1,22 +1,33 @@
 ﻿using System.Diagnostics;
 using System.IO.Compression;
+using System.Runtime.InteropServices;
 
 var targetDir = args[0];
 var updateZip = args[1];
-var pid = int.Parse(args[2]);
+try
+{
+    var pid = int.Parse(args[2]);
 
-// Wait for app to exit
-Process.GetProcessById(pid).WaitForExit();
+    // Wait for app to exit
+    Process.GetProcessById(pid).WaitForExit();
+} 
+catch (ArgumentException ae)
+{
+    if(ae.Message.Contains("Process with an Id of") && ae.Message.Contains("is not running."))
+    {
+        Console.WriteLine("Process is not running, proceeding with update.");
+    }
+    else
+    {
+        throw;
+    }
+}
+// Create a temporary directory for downloading and extracting the update
 
-// Extract update
-var extractDir = Path.Combine(
-    Path.GetTempPath(),
-    "app_update_extract"
-);
 
-if (Directory.Exists(extractDir))
-    Directory.Delete(extractDir, true);
+// Temporarily Download new ZIP files from the manifest url
 
+// Extract the ZIP file to a temporary directory
 ZipFile.ExtractToDirectory(updateZip, extractDir);
 
 // Replace files
@@ -29,6 +40,8 @@ foreach (var file in Directory.GetFiles(extractDir))
 
     File.Copy(file, dest, true);
 }
+
+// Delete the temporary ZIP
 
 // Restart app
 var exe = Directory

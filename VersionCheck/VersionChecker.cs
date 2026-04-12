@@ -21,6 +21,16 @@ namespace VersionCheck
                 return localVersion ?? new Version(0, 0, 0);
         }
 
+        public async Task<string> GetCurrentUpdateZip()
+        {
+            var remote = await _http.GetFromJsonAsync<VersionManifest>(_options.VersionManifestUrl);
+            if (remote is null)
+            {
+                return ("Invalid version manifest."); ;
+            }
+            return remote.downloadUrl;
+        }
+
         public async Task<(bool HasUpdate, string Message)> CheckAsync()
         {
             var localVersion = Assembly.GetEntryAssembly()?.GetName().Version;
@@ -42,6 +52,6 @@ namespace VersionCheck
                 : (false, "App is up to date.");
         }
 
-        private sealed record VersionManifest(string Version);
+        private sealed record VersionManifest(string Version, string downloadUrl);
     }
 }
